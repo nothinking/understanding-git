@@ -10,6 +10,14 @@ module.exports = function(grunt) {
 				scripts: [
 					'node_modules/shower-core/shower.min.js'
 				]
+			},
+			index_ko: {
+				title: 'Understanding Git',
+				src: 'src/index_ko.md',
+				styles: 'styles/screen.css',
+				scripts: [
+					'node_modules/shower-core/shower.min.js'
+				]
 			}
 		},
 		watch: {

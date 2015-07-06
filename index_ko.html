@@ -1,0 +1,646 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<title>Understanding Git</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=680, user-scalable=no">
+	<meta http-equiv="x-ua-compatible" content="ie=edge">
+	<meta name="generator" content="https://github.com/sapegin/grunt-shower-markdown">
+	<link rel="stylesheet" href="themes/ribbon/styles/screen.css">
+	
+		<link rel="stylesheet" href="styles/screen.css?1436192112000">
+	
+</head>
+<body class="list">
+	<header class="caption">
+		<h1 id="understanding-git">Understanding Git</h1>
+<p>by <a href="https://twitter.com/tednaleid">@tednaleid</a></p>
+
+	</header>
+
+	
+	<section class="slide shout" ><div>
+		<h1>Git 이해하기</h1>
+<h2>by <a href="https://twitter.com/tednaleid">@tednaleid</a></h2>
+
+	</div></section>
+	
+	<section class="slide quietest shout" ><div>
+		<h1>Commits은 불변이다.</h1>
+<h2>commits은 수정할 수 없다.<br/><br/>새로운 commits을 추가할 수만 있다.</h2>
+
+	</div></section>
+	
+	<section class="slide quietest shout" ><div>
+		<h1>commits은 사라지지 않는다.</h1>
+<h2>의도치않게 commits을 제거하는 것은  <em>불가능</em> 하다.<br/><br/>하지만 <code>rm -rf .git</code> 을 하면 push하지 않은 commits은 사라진다.</h2>
+
+	</div></section>
+	
+	<section class="slide quietest shout" ><div>
+		<h1>빨리 &amp; 자주</h1>
+<h2>커밋하지 않은 작업은 쉽게 사라지니, 빨리 &amp; 자주 commit하자.</h2>
+
+	</div></section>
+	
+	<section class="slide quietest shout" ><div>
+		<h1>garbage collection?</h1>
+<h2>garbage collection은 유일한 파괴적인 git action이다.</h2>
+
+	</div></section>
+	
+	<section class="slide quietest shout" ><div>
+		<h1>garbage collection?</h1>
+<h2>garbage collection은 point가 없는 commits만 제거한다.</h2>
+
+	</div></section>
+	
+	<section class="slide " ><div>
+		<h1>points?</h1>
+<h1>other commits</h1>
+<h1>tags</h1>
+<h1>branches</h1>
+<h1>the reflog</h1>
+
+	</div></section>
+	
+	<section class="slide " ><div>
+		<p><br/></p>
+<h1>commit</h1>
+<p>point at 0..N parent commits </p>
+<pre><code>                          E---F---G</code>
+<code>                         /         \</code>
+<code>                    A---B---C---D---H---I</code></pre><p>대부분 하나나 두개의 parent commits 을 가지고 있다.</p>
+
+	</div></section>
+	
+	<section class="slide " ><div>
+		<h1>tag</h1>
+<p>고정된 commit pointers</p>
+<pre><code>                      A---B---C </code>
+<code>                              ↑</code>
+<code>                         release_1.0</code></pre><pre><code>% git commit -m &quot;adding stuff to C&quot;</code></pre><pre><code>                      A---B---C---D </code>
+<code>                              ↑</code>
+<code>                         release_1.0</code></pre>
+	</div></section>
+	
+	<section class="slide " ><div>
+		<h1>branch</h1>
+<p>유동적인 commit pointer</p>
+<pre><code>                      A---B---C</code>
+<code>                              ↑</code>
+<code>                            master</code></pre><pre><code>% git commit -m &quot;adding stuff to B&quot;</code></pre><pre><code>                      A---B---C---D</code>
+<code>                                  ↑</code>
+<code>                                master</code></pre>
+	</div></section>
+	
+	<section class="slide " ><div>
+		<h1>remote branch</h1>
+<p> &#8220;remote&#8221; branch 는 local branch에 있는 하나의 포인터일 뿐인다. </p>
+<pre><code>                                 master</code>
+<code>                                    ↓</code>
+<code>                    A---B---C---D---E</code>
+<code>                            ↑       </code>
+<code>                      origin/master</code></pre><p><code>fetch</code> 나 <code>pull</code> 을 할때 업데이트된다. 그 외에는 아무 변화도 없다. </p>
+
+	</div></section>
+	
+	<section class="slide " ><div>
+		<h1>branch</h1>
+<p><code>.git</code> 하위 디렉토리에 텍스트 파일로 되어있다.</p>
+<pre><code>% ls -1 .git/refs/heads/**/*</code>
+<code>.git/refs/heads/master</code>
+<code>.git/refs/heads/my_feature_branch</code></pre><pre><code>% ls -1 .git/refs/remotes/**/*  </code>
+<code>.git/refs/remotes/origin/HEAD</code>
+<code>.git/refs/remotes/origin/master</code>
+<code>.git/refs/remotes/origin/my_feature_branch</code></pre>
+	</div></section>
+	
+	<section class="slide " ><div>
+		<h1>branch</h1>
+<p>pointing하고 있는 커밋의 SHA 텍스트가 들어있다.</p>
+<pre><code>% cat .git/refs/heads/master </code>
+<code>0981e8c8ffbd3a1277dda1173fb6f5cbf4750d51</code>
+<code>&shy;</code>
+<code># .git/objects/09/81e8c8ffbd3a1277dda1173fb6f5cbf4750d51</code></pre>
+	</div></section>
+	
+	<section class="slide " ><div>
+		<h1>branches point at commits</h1>
+<p><code>tree</code> (filesystem), <code>parent</code> commits, commit metadata를 포함한다.</p>
+<pre><code>% git cat-file -p 0981e8c8ffbd3a1277dda1173fb6f5cbf4750d51</code>
+<code>tree 4fd7894316b4659ef3f53426166697858d51a291</code>
+<code>parent e324971ecf1e0f626d4ba8b0adfc22465091c100</code>
+<code>parent d33700dde6d38b051ba240ee97d685afdaf07515</code>
+<code>author Ted Naleid &lt;contact@naleid.com&gt; 1328567163 -0800</code>
+<code>committer Ted Naleid &lt;contact@naleid.com&gt; 1328567163 -0800</code>
+<code>&shy;</code>
+<code>merge commit of two branches</code></pre><p>The ID is the SHA of the commit&#39;s contents</p>
+
+	</div></section>
+	
+	<section class="slide " ><div>
+		<p><br/></p>
+<h1>branches</h1>
+<p>commits은 branches에 &#8220;종속&#8221; 되지 않는다. commit meta 데이터에는 branches에 대한 내용은 없다.</p>
+
+	</div></section>
+	
+	<section class="slide " ><div>
+		<h1>branches</h1>
+<p>branch의 commits은 branch point의 족보다.</p>
+<pre><code>                                 feature</code>
+<code>                                    ↓</code>
+<code>                            E---F---G </code>
+<code>                           /</code>
+<code>                      A---B---C---D </code>
+<code>                                  ↑ </code>
+<code>                                master</code></pre><p><code>master</code> 는 <code>A-B-C-D</code> 고 <code>feature</code> 는 <code>A-B-E-F-G</code></p>
+
+	</div></section>
+	
+	<section class="slide " ><div>
+		<h1>HEAD</h1>
+<p><code>HEAD</code> 는 현재 branch의 commit이다.</p>
+<p>HEAD는 다음 커밋의 부모가 된다.</p>
+<pre><code>% cat .git/HEAD</code>
+<code>ref: refs/heads/master</code></pre><p>대부분 branch를 point하지만 detach됐을 경우 SHA를 point한다.</p>
+
+	</div></section>
+	
+	<section class="slide " ><div>
+		<h1>the reflog</h1>
+<p><code>HEAD</code>이동 로그이다</p>
+<pre><code>% git reflog                                       </code>
+<code>d72efc4 HEAD@{0}: commit: adding bar.txt</code>
+<code>6435f38 HEAD@{1}: commit (initial): adding foo.txt</code></pre><pre><code>% git commit -m &quot;adding baz.txt&quot;</code></pre><pre><code>% git reflog                                       </code>
+<code>b5416cb HEAD@{0}: commit: adding baz.txt</code>
+<code>d72efc4 HEAD@{1}: commit: adding bar.txt</code>
+<code>6435f38 HEAD@{2}: commit (initial): adding foo.txt</code></pre><p>기본적으로 30일간 history가 보관된다.</p>
+
+	</div></section>
+	
+	<section class="slide " ><div>
+		<p><br/></p>
+<h1>the reflog</h1>
+<p>unique to a repository instance</p>
+
+	</div></section>
+	
+	<section class="slide " ><div>
+		<h1>the reflog</h1>
+<p>개별 branch scope를 가진다.</p>
+<pre><code>% git reflog my_branch</code>
+<code>347f5fe my_branch@{0}: merge master: Merge made by the recurs… </code>
+<code>4e6007e my_branch@{1}: merge origin/my_branch: Fast-forward</code>
+<code>32834d8 my_branch@{2}: commit (amend): upgrade redis version</code>
+<code>2720e40 my_branch@{3}: commit: upgrade redis version</code></pre>
+	</div></section>
+	
+	<section class="slide " ><div>
+		<p><br/></p>
+<h1>dangling commit</h1>
+<p>commit을 point하는 것이 reflog뿐이라면 이 커밋은 dangling이다.</p>
+
+	</div></section>
+	
+	<section class="slide " ><div>
+		<h1>dangling commit</h1>
+<pre><code>                    A---B---C---D---E---F</code>
+<code>                                        ↑</code>
+<code>                                      master</code></pre><pre><code>% git reset --hard SHA_OF_B</code></pre><pre><code>                    A---B---C---D---E---F</code>
+<code>                        ↑</code>
+<code>                      master</code></pre><p><code>C..F</code> 는 dangling</p>
+
+	</div></section>
+	
+	<section class="slide " ><div>
+		<h1>dangling commit</h1>
+<p>reflog덕분에 30일동안은 남아있다.</p>
+<pre><code>                                     HEAD@{1}</code>
+<code>                                        ↓</code>
+<code>                    A---B---C---D---E---F</code>
+<code>                        ↑</code>
+<code>                     master (also HEAD@{0})</code></pre><p>reflog가 추가되면 <code>HEAD@{1}</code> 는 <code>HEAD@{2}</code>..<code>HEAD@{N}</code> 가 된다.</p>
+
+	</div></section>
+	
+	<section class="slide " ><div>
+		<p><br/></p>
+<h1>garbage collection</h1>
+<p>once a dangling commit leaves the reflog, it is &#8220;loose&#8221; and is at risk of garbage collection</p>
+
+	</div></section>
+	
+	<section class="slide " ><div>
+		<p><br/></p>
+<h1>garbage collection</h1>
+<p>loose objects가 1000개 이상이 되면 git은 gc를 한다.</p>
+
+	</div></section>
+	
+	<section class="slide " ><div>
+		<p><br/></p>
+<h1>garbage collection</h1>
+<p>gc되는 것을 막고 싶으면 point를 만들면 된다.</p>
+<pre><code>% git tag mytag SHA_OF_DANGLING_COMMIT</code></pre>
+	</div></section>
+	
+	<section class="slide " ><div>
+		<h1>the index</h1>
+<p>commit전의 staging area</p>
+<p><code>add -A :/</code> 는 모든 변경사항을 index에 넣고 commit을 준비한다.</p>
+<p><code>git commit -a -m &quot;msg&quot;</code>은 index를통하지 않고 commit한다.</p>
+
+	</div></section>
+	
+	<section class="slide " ><div>
+		<p><br/></p>
+<h1>실험정신</h1>
+<p>뭐가 잘못되어도 이전 커밋으로 되돌릴 수 있다.</p>
+
+	</div></section>
+	
+	<section class="slide shout" ><div>
+		<h1>where you are?</h1>
+<h2>이동하기전에 현재 어디에 있는지(어느 branch, commit을 point하고 있는지) 알아야 한다.</h2>
+
+	</div></section>
+	
+	<section class="slide quietest shout" ><div>
+		<h1>Visualization 툴이 하나쯤은 있어야 한다.</h1>
+
+	</div></section>
+	
+	<section class="slide small-code" ><div>
+		<h1>나의 경우:</h1>
+<pre><code>~/.gitconfig:</code>
+<code>[alias]</code>
+<code>l = log --graph --pretty=&#39;%Cred%h%Creset -%C(yellow)%d%Creset %s %Cblue[%an]%Creset %Cgreen(%cr)%Creset&#39; --abbrev-commit --date=relative</code>
+<code>la = !git l --all</code></pre><pre><code>git la</code></pre><img src="images/terminal.png" alt="" height="400px">
+
+	</div></section>
+	
+	<section class="slide " ><div>
+		<h1>Git Tower</h1>
+<img src="images/tower.png" alt="" height="500px">
+
+	</div></section>
+	
+	<section class="slide " ><div>
+		<h1>SourceTree</h1>
+<img src="images/sourcetree.png" alt="" height="500px">
+
+	</div></section>
+	
+	<section class="slide shout" ><div>
+		<h1>좋은 부분을 배워서 자기 것으로 만들어라.</h1>
+
+	</div></section>
+	
+	<section class="slide " ><div>
+		<h1>checkout -</h1>
+<p><code>cd -</code> 와 유사하게 이전 branch로 이동할 수 있다.</p>
+<pre><code>                        E---F  ← feature &amp; HEAD</code>
+<code>                       /</code>
+<code>                  A---B---C---D </code>
+<code>                              ↑ </code>
+<code>                           master</code></pre><pre><code>% git checkout -</code></pre><pre><code>                        E---F  ← feature </code>
+<code>                       /</code>
+<code>                  A---B---C---D </code>
+<code>                              ↑ </code>
+<code>                       master &amp; HEAD</code></pre>
+	</div></section>
+	
+	<section class="slide " ><div>
+		<h1>commit --amend</h1>
+<p>마지막 커밋을 다시 한다.</p>
+<pre><code>                        A---B---C</code>
+<code>                                ↑    </code>
+<code>                          master &amp; HEAD</code></pre><pre><code>&lt;... change some files ... &gt; </code>
+<code>% git commit -a --amend --no-edit</code></pre><pre><code>                              C&#39; ← master &amp; HEAD</code>
+<code>                             /</code>
+<code>                        A---B---C</code>
+<code>                                ↑    </code>
+<code>                  (dangling but still in reflog)</code></pre>
+	</div></section>
+	
+	<section class="slide " ><div>
+		<p><br/></p>
+<h1>rebasing</h1>
+<p>여러 순차적인 커밋들의 부모 커밋을 다시 적용하고, </p>
+<p>current branch의 pointer를 이동시킨다.</p>
+
+	</div></section>
+	
+	<section class="slide " ><div>
+		<h1>rebasing</h1>
+<pre><code>                        E---F  ← feature &amp; HEAD</code>
+<code>                       /</code>
+<code>                  A---B---C---D </code>
+<code>                              ↑ </code>
+<code>                           master</code></pre><pre><code>% git rebase master</code></pre><pre><code>                  (dangling but still in reflog)</code>
+<code>                            ↓</code>
+<code>                        E---F</code>
+<code>                       /</code>
+<code>                  A---B---C---D---E&#39;--F&#39;</code>
+<code>                              ↑       ↑ </code>
+<code>                           master  feature &amp; HEAD</code></pre>
+	</div></section>
+	
+	<section class="slide " ><div>
+		<h1>rebasing</h1>
+<pre><code>% git rebase --abort</code></pre><p>문제가 있으면 <code>--abort</code> 를 추가해서 rebase하고 그래도 문제가 있으면</p>
+<p><code>reset --hard</code>를 해서 마지막 커밋으로 돌아가라.</p>
+
+	</div></section>
+	
+	<section class="slide " ><div>
+		<p><br/></p>
+<h1>rebasing - a private activity</h1>
+<p>push한 commits은 절대 rebase하지 마라.</p>
+
+	</div></section>
+	
+	<section class="slide " ><div>
+		<p><br/></p>
+<h1>rebasing - a private activity</h1>
+<p>public rebasing is bad as others could have the same commits with different SHAs</p>
+
+	</div></section>
+	
+	<section class="slide " ><div>
+		<h1>cherry picking</h1>
+<p>다른 branch의 commit을 가져 올 수 있다.</p>
+<pre><code>                            E---F---G </code>
+<code>                           /</code>
+<code>                      A---B---C---D </code>
+<code>                                  ↑ </code>
+<code>                             master &amp; HEAD</code></pre><pre><code>% git cherry-pick SHA_OF_F</code></pre><pre><code>                            E---F---G </code>
+<code>                           /</code>
+<code>                      A---B---C---D---F&#39; </code>
+<code>                                      ↑ </code>
+<code>                                 master &amp; HEAD</code></pre>
+	</div></section>
+	
+	<section class="slide quietest shout" ><div>
+		<h1><code>reset</code> 은 branch의 pointer를 옮긴다.</h1>
+
+	</div></section>
+	
+	<section class="slide " ><div>
+		<h1>reset --soft</h1>
+<pre><code>                    A---B---C---D---E</code>
+<code>                                    ↑</code>
+<code>                                  master</code></pre><pre><code>% git reset --soft SHA_OF_C</code></pre><pre><code>                    working dir &amp; index still look like</code>
+<code>                                    ↓</code>
+<code>                    A---B---C---D---E</code>
+<code>                            ↑</code>
+<code>                          master</code></pre><ol>
+<li><code>HEAD</code> &amp; current branch 를 특정 <code>&lt;SHA&gt;</code>로 옮긴다.</li>
+<li>index - unchanged </li>
+<li>working directory - unchanged </li>
+</ol>
+
+	</div></section>
+	
+	<section class="slide " ><div>
+		<h1>reset --soft</h1>
+<p>몇개의 commits를 하나의 commit로 바꿀 때 유용하다.</p>
+<pre><code>                    working dir &amp; index still look like</code>
+<code>                                    ↓</code>
+<code>                    A---B---C---D---E</code>
+<code>                            ↑</code>
+<code>                          master</code></pre><pre><code>% git commit -m &quot;perfect code on the &#39;first&#39; try&quot;</code></pre><pre><code>                    A---B---C---E&#39;</code>
+<code>                                ↑</code>
+<code>                              master</code></pre>
+	</div></section>
+	
+	<section class="slide " ><div>
+		<h1>reset --soft</h1>
+<p>좀 더 복잡한 상황을 보자.</p>
+<pre><code>                              master</code>
+<code>                                ↓</code>
+<code>                A---B---C---D---E </code>
+<code>                 \       \</code>
+<code>                  F---G---H---I ← feature &amp; HEAD</code></pre><p>위의 방법으로는 할 수 없다.</p>
+
+	</div></section>
+	
+	<section class="slide " ><div>
+		<h1>reset --soft</h1>
+<p>merge 를 한번 하자.</p>
+<pre><code>% git merge master</code></pre><pre><code>                              master</code>
+<code>                                ↓</code>
+<code>                A---B---C---D---E </code>
+<code>                 \       \       \</code>
+<code>                  F---G---H---I---J ← feature &amp; HEAD</code></pre>
+	</div></section>
+	
+	<section class="slide " ><div>
+		<h1>reset --soft</h1>
+<p>이전 커밋으로 <code>reset</code>하자</p>
+<pre><code>% git reset --soft master</code></pre><pre><code>                A---B---C---D---E ← feature &amp; HEAD &amp; master</code>
+<code>                                 \</code>
+<code>                                  J ← working dir &amp; index</code></pre><pre><code>% git commit -m &quot;pristine J&quot;</code></pre><pre><code>                              master</code>
+<code>                                ↓</code>
+<code>                A---B---C---D---E---J&#39; ← feature &amp; HEAD</code></pre>
+	</div></section>
+	
+	<section class="slide " ><div>
+		<h1>reset --hard</h1>
+<pre><code>% git reset --hard &lt;SHA&gt;</code></pre><p><br/></p>
+<ol>
+<li>moves <code>HEAD</code> &amp; the current branch to the specified <code>&lt;SHA&gt;</code> </li>
+<li>clean the index, make it look like <code>&lt;SHA&gt;</code> </li>
+<li>clean the working copy, make it look like <code>&lt;SHA&gt;</code> </li>
+</ol>
+<p>commit하지 않은 것은<span class="danger">위험</span> 잘못 커밋한 것을 수정할 때 좋다.</p>
+
+	</div></section>
+	
+	<section class="slide " ><div>
+		<h1>reset --hard HEAD</h1>
+<pre><code>% git reset --hard HEAD</code></pre><p>working directory, index를 깨끗이 한다. branch pointer는 변화없다.</p>
+<p><code>reset</code>의 더 많은 정보는: <a href="http://progit.org/2011/07/11/reset.html">http://progit.org/2011/07/11/reset.html</a></p>
+
+	</div></section>
+	
+	<section class="slide " ><div>
+		<p><br/></p>
+<h1>fetch</h1>
+<p>download new commits and update the remote branch pointer</p>
+<p>local branches는 변화가 없다.</p>
+
+	</div></section>
+	
+	<section class="slide " ><div>
+		<h1>fetch</h1>
+<pre><code>                   origin/master</code>
+<code>(local)                  ↓</code>
+<code>                     A---B---C---D ← master &amp; HEAD</code></pre><pre><code>                     A---B---E---F   </code>
+<code>(origin)                         ↑ </code>
+<code>                              master (in remote repo)</code></pre><pre><code>% git fetch</code></pre><pre><code>                         origin/master</code>
+<code>                               ↓</code>
+<code>                           E---F</code>
+<code>(local)                   /</code>
+<code>                     A---B---C---D ← master &amp; HEAD</code></pre>
+	</div></section>
+	
+	<section class="slide " ><div>
+		<p><br/></p>
+<h1>pull</h1>
+<p><code>pull</code> 은<code>fetch</code> + <code>merge</code></p>
+
+	</div></section>
+	
+	<section class="slide " ><div>
+		<h1>pull</h1>
+<pre><code>&shy;</code>
+<code>                   origin/master</code>
+<code>(local)                  ↓</code>
+<code>                     A---B---C---D ← master &amp; HEAD</code></pre><pre><code>                     A---B---E---F   </code>
+<code>(origin)                         ↑ </code>
+<code>                              master (local ref in remote repo)</code></pre><pre><code>% git pull</code></pre><pre><code>                         origin/master</code>
+<code>                               ↓</code>
+<code>                           E---F----</code>
+<code>                          /         \</code>
+<code>(local)              A---B---C---D---G ← master &amp; HEAD</code></pre>
+	</div></section>
+	
+	<section class="slide " ><div>
+		<h1>the &#8220;right&#8221; way to pull down changes from the server</h1>
+<ol>
+<li><code>stash</code> any uncommitted changes (if any)</li>
+<li><code>fetch</code> the latest refs and commits from origin</li>
+<li><code>rebase -p</code> your changes (if any) onto origin&#39;s head<br/> else, just fast-forward your head to match origin&#39;s</li>
+<li>un-<code>stash</code> any previously stashed changes</li>
+</ol>
+<p><code>fetch</code> + <code>rebase</code> avoids unnecessary commits</p>
+
+	</div></section>
+	
+	<section class="slide " ><div>
+		<h1>rebasing pull</h1>
+<p><br/>
+As of git 1.8.5, git has finally added a rebase switch to <code>pull</code>:</p>
+<pre><code>% git pull --rebase</code></pre><p>This will do the <code>fetch</code> + <code>rebase</code> for you (you still stash on your own).</p>
+
+	</div></section>
+	
+	<section class="slide shout myth" ><div>
+		<h1>git 은 위험하다?</h1>
+<h2>myth #1</h2>
+
+	</div></section>
+	
+	<section class="slide shout" ><div>
+		<h1>git  <em>가잔 안전한</em> version control이다</h1>
+<h2>reality</h2>
+
+	</div></section>
+	
+	<section class="slide shout myth" ><div>
+		<h1>git lets you<br/>rewrite history</h1>
+<h2>myth #2</h2>
+
+	</div></section>
+	
+	<section class="slide shout" ><div>
+		<h1>rewriting <br/>history is a <em>lie</em></h1>
+<h2>reality</h2>
+
+	</div></section>
+	
+	<section class="slide shout myth" ><div>
+		<h1>git syntax is terrible</h1>
+<h2>myth #3</h2>
+
+	</div></section>
+	
+	<section class="slide shout" ><div>
+		<h1>git syntax is<br/><em>really terrible</em></h1>
+<h2>reality</h2>
+
+	</div></section>
+	
+	<section class="slide shout" ><div>
+		<h1>git mislabels things</h1>
+<h2>ex: git branches 는 당신이 생각하고 있는 그런게 아니다.</h2>
+
+	</div></section>
+	
+	<section class="slide shout" ><div>
+		<h1>이전 version control을 사용하며 생긴 예상을 버려라.</h1>
+
+	</div></section>
+	
+	<section class="slide shout" ><div>
+		<h1>Questions?</h1>
+
+	</div></section>
+	
+	<section class="slide shout" ><div>
+		<h1>Bonus Section!</h1>
+
+	</div></section>
+	
+	<section class="slide " ><div>
+		<h1>reset (default)</h1>
+<pre><code>% git reset [--mixed] &lt;SHA&gt;</code></pre><p><br/></p>
+<ol>
+<li>moves <code>HEAD</code> &amp; the current branch to the specified <code>&lt;SHA&gt;</code> </li>
+<li>clean the index, make it look like <code>&lt;SHA&gt;</code> </li>
+<li>working directory - unchanged</li>
+</ol>
+<p><code>git reset HEAD</code> 는 index에 있는 것을 unstage한다.</p>
+
+	</div></section>
+	
+	<section class="slide " ><div>
+		<p><br/></p>
+<h1>squashing</h1>
+<p>여러개의 branch commits를 하나의 commit으로 merge한다.</p>
+
+	</div></section>
+	
+	<section class="slide " ><div>
+		<h1>squashing</h1>
+<pre><code>                              E---F---G ← feature</code>
+<code>                             /</code>
+<code>                A---B---C---D </code>
+<code>                            ↑ </code>
+<code>                     master &amp; HEAD</code></pre><pre><code>% git merge --squash feature</code></pre><pre><code>                              E---F---G ← feature</code>
+<code>                             /</code>
+<code>                A---B---C---D---G&#39; </code>
+<code>                                ↑ </code>
+<code>                         master &amp; HEAD</code></pre><p>여러개의 commits가 중요하지 않을 때 history를 깔끔히 할 수 있다.</p>
+
+	</div></section>
+	
+	<section class="slide " ><div>
+		<h1>recovering commits</h1>
+<p><code>C</code>를 살리고 싶어!</p>
+<pre><code>                              C&#39; ← master &amp; HEAD</code>
+<code>                             /</code>
+<code>                        A---B---C ← (dangling)</code></pre><pre><code>% git reflog master  # find SHA_OF_C </code>
+<code>% git reset --hard SHA_OF_C</code></pre><pre><code>                              C&#39; ← (dangling)</code>
+<code>                             /</code>
+<code>                        A---B---C</code>
+<code>                                ↑    </code>
+<code>                            master &amp; HEAD</code></pre>
+	</div></section>
+	
+
+	<div class="progress"><div></div></div>
+	<script src="shower/shower.min.js"></script>
+
+	
+		<script src="node_modules/shower-core/shower.min.js?1410714146000"></script>
+	
+
+	
+
+	<!-- Shower: http://shwr.me -->
+</body>
+</html>
